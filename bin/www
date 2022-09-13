@@ -1,0 +1,5 @@
+#! /usr/bin/env node
+
+// 是一个可执行文件
+// 执行某个文件的功能，把逻辑放到外面去写
+require('../src/main')
