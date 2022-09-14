@@ -114,12 +114,28 @@ module.exports = async (projectName) => {
                 .use(async (files, metal, done) => {
                     // console.log("files", files) 所有的文件
                     let args = require(path.join(result, 'ask.js'))
-                    console.log("args", args)
-                    // let res = await Inquirer.prompt(args)
+                    // console.log("args", args)
+                    let obj = await Inquirer.prompt(args)
+                    const metal = metal.metadata()
+                    Object.assign(metal, obj)
                     // console.log("res", res) // 用户填写的结果
+                    delete files['ask.js']
                     done()
                 })
                 .use((files, metal, done) => {
+                    // 根据用户的输入  下载模块
+                    console.log(metal.metadata())
+                    let obj = metal.metadata()
+                    Reflect.ownKeys(files).forEach(async file => {
+                        // 这个是要处理的
+                        if (file.includes('js') || file.includes('json')) {
+                            let content = files[file].contents.toString()
+                            if (content.includes('<%')) {
+                                content = await render(content, obj)
+                                files[file].contents = Buffer.from(content) // 替换好后重新赋值给他，有可能是图片要用二进制
+                            }
+                        }
+                    })
                     done()
                 })
                 .build((err) => {
@@ -136,5 +152,9 @@ module.exports = async (projectName) => {
 
     // 复杂的模版 metalsmith只要是模版编译 都需要这个模块
     // 把git上的项目下载下来，如果有ask文件，就是一个复杂的模版，我们需要用户选择，选择后编译模版
-    
+    // config install add 命令，核心就是模版渲染
+    // nrm use npm(切换到官网源)
+    // npm addUser(用户名和邮箱)
+    // npm publish
+    // npm unlink --force
 }
